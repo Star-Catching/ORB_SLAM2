@@ -16,7 +16,7 @@
 *
 * You should have received a copy of the GNU General Public License
 * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
-* 123456
+* 123456789
 */
 
 //主进程的实现文件
