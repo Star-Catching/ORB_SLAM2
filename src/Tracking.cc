@@ -1191,7 +1191,7 @@ bool Tracking::TrackReferenceKeyFrame()
     // We perform first an ORB matching with the reference keyframe
     // If enough matches are found we setup a PnP solver
     ORBmatcher matcher(0.7,true);
-    vector<MapPoint*> vpMapPointMatches;
+    vector<MapPoint*> vpMapPointMatches;  // wxz 地图点的匹配关系
 
     // step 2：通过特征点的BoW加快当前帧与参考帧之间的特征点匹配
     //NOTICE 之前师兄说的，通过词袋模型加速匹配就是在这里哇

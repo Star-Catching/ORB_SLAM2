@@ -549,9 +549,9 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
     const float factor = HISTO_LENGTH/360.0f;
 
     // 匹配点对距离，注意是按照F2特征点数目分配空间
-    vector<int> vMatchedDistance(F2.mvKeysUn.size(),INT_MAX);
+    vector<int> vMatchedDistance(F2.mvKeysUn.size(),INT_MAX);   // gpt 存储帧 F2 中每个特征点与帧 F1 中对应特征点的最佳匹配描述子的距离。 注意是存储 他是个容器
     // 从帧2到帧1的反向匹配，注意是按照F2特征点数目分配空间
-    vector<int> vnMatches21(F2.mvKeysUn.size(),-1);
+    vector<int> vnMatches21(F2.mvKeysUn.size(),-1);   // wxz 这也是个容器 
 
     // 遍历帧1中的所有特征点
     for(size_t i1=0, iend1=F1.mvKeysUn.size(); i1<iend1; i1++)
@@ -617,7 +617,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
                 }
                 // 次优的匹配关系，双向建立
                 // vnMatches12保存参考帧F1和F2匹配关系，index保存是F1对应特征点索引，值保存的是匹配好的F2特征点索引
-                vnMatches12[i1]=bestIdx2;
+                vnMatches12[i1]=bestIdx2; // wxz  vnMatches12[i1]的大小是1中特征点的数目， 他的值是存的是跟他匹配的2里面的特征点的index
                 vnMatches21[bestIdx2]=i1;
                 vMatchedDistance[bestIdx2]=bestDist;
                 nmatches++;
@@ -631,7 +631,7 @@ int ORBmatcher::SearchForInitialization(Frame &F1, Frame &F2, vector<cv::Point2f
                         rot+=360.0f;
                     // 前面factor = HISTO_LENGTH/360.0f 
                     // bin = rot / 360.of * HISTO_LENGTH 表示当前rot被分配在第几个直方图bin  
-                    int bin = round(rot*factor);
+                    int bin = round(rot*factor);   // wxz bin就是直方图的柱子
                     // 如果bin 满了又是一个轮回
                     if(bin==HISTO_LENGTH)
                         bin=0;
@@ -836,7 +836,7 @@ int ORBmatcher::SearchByBoW(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
 }
 
 /*
- * @brief 利用基本矩阵F12，在两个关键帧之间未匹配的特征点中产生新的3d点
+ * @brief 利用基本矩阵F12，用Bow加速匹配两个关键帧之间未匹配的特征点中产生新的3d点
  * @param pKF1          关键帧1
  * @param pKF2          关键帧2
  * @param F12           基础矩阵

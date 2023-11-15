@@ -1168,7 +1168,7 @@ void Frame::ComputeStereoMatches() {
                     mvuRight[iL] = bestuR;
                     vDistIdx.push_back(pair<int, int>(bestDist, iL));
                 }
-            }
+            } 
 
             // Step 6. 删除离群点(outliers)
             // 块匹配相似度阈值判断，归一化sad最小，并不代表就一定是匹配的，比如光照变化、弱纹理、无纹理等同样会造成误匹配
