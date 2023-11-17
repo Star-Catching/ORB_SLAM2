@@ -257,19 +257,22 @@ vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
     // Search all keyframes that share a word with current frame
     //. 步骤1：找出和当前帧具有公共单词的所有关键帧
     //hwh Step 1.利用逆序索引mnRelocWords 记录之前的某一关键帧与当前帧存在相同特征点word的数目mnRelocWords
+    // wxz 找出和当前帧具有公共单词（word）的所有关键帧
     {
         unique_lock<mutex> lock(mMutex);
 
         // words是检测图像是否匹配的枢纽，遍历该pKF的每一个word
+        // wxz mBowVec 内部实际存储的是std：：map<WordId,WordValue>
+        // wxz WordId和WordValue 表示Word在叶子中的id 和权重 
         for(DBoW2::BowVector::const_iterator vit=F->mBowVec.begin(), vend=F->mBowVec.end(); vit != vend; vit++)
         {
             // 提取所有包含该word的KeyFrame
-            list<KeyFrame*> &lKFs = mvInvertedFile[vit->first];
+            list<KeyFrame*> &lKFs = mvInvertedFile[vit->first];  // wxz 倒排索引
 
             for(list<KeyFrame*>::iterator lit=lKFs.begin(), lend= lKFs.end(); lit!=lend; lit++)
             {
                 KeyFrame* pKFi=*lit;
-                if(pKFi->mnRelocQuery!=F->mnId)// pKFi还没有标记为pKF的候选帧
+                if(pKFi->mnRelocQuery!=F->mnId)// pKFi还没有标记为pKF的候选帧  
                 {
                     pKFi->mnRelocWords=0;
                     pKFi->mnRelocQuery=F->mnId;

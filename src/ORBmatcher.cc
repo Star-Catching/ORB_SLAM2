@@ -231,7 +231,7 @@ bool ORBmatcher::CheckDistEpipolarLine(const cv::KeyPoint &kp1,const cv::KeyPoin
 //const int ORBmatcher::TH_HIGH = 100;
  //const int ORBmatcher::TH_LOW = 50;
  //const int ORBmatcher::HISTO_LENGTH = 30;
-int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPointMatches)
+int ORBmatcher::SearchByBoW(KeyFrame* pKF,Frame &F, vector<MapPoint*> &vpMapPointMatches)   
 {
     // 获取该关键帧的mappoint
     const vector<MapPoint*> vpMapPointsKF = pKF->GetMapPointMatches();

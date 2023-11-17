@@ -2105,7 +2105,7 @@ bool Tracking::Relocalization()
         else
         {
             // Step 3：通过BoW进行匹配
-            int nmatches = matcher.SearchByBoW(pKF,mCurrentFrame,vvpMapPointMatches[i]);
+            int nmatches = matcher.SearchByBoW(pKF,mCurrentFrame,vvpMapPointMatches[i]); // 返回的是nmatches
             //如果和当前帧的匹配数小于15,那么只能放弃这个关键帧
             if(nmatches<15)
             {
