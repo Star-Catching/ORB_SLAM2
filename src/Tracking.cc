@@ -527,7 +527,7 @@ void Tracking::Track()
             // 只进行跟踪tracking，局部地图不工作
  
             // step 2.1：跟踪上一帧或者参考帧或者重定位
-
+j
             // tracking跟丢了, 那么就只能进行重定位了
             if(mState==LOST)
             {
@@ -1852,6 +1852,7 @@ void Tracking::UpdateLocalMap()
 {
     // This is for visualization
     // 这行程序放在UpdateLocalPoints函数后面是不是好一些
+    // 设置参考地图点用于绘图显示局部地图点 （红色）
     mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
 
     // Update
@@ -1923,6 +1924,10 @@ void Tracking::UpdateLocalKeyFrames()
                 const map<KeyFrame*,size_t> observations = pMP->GetObservations();
                 //这里由于一个地图点可以被多个关键帧观测到,因此对于每一次观测,都获得观测到这个地图点的关键帧,并且对关键帧进行投票
                 for(map<KeyFrame*,size_t>::const_iterator it=observations.begin(), itend=observations.end(); it!=itend; it++)
+                    // 这里的操作非常精彩！
+                    // map[key] = value，当要插入的键存在时，会覆盖键对应的原来的值。如果键不存在，则添加一组键值对
+                    // it->first 是地图点看到的关键帧，同一个关键帧看到的地图点会累加到该关键帧计数
+                    // 所以最后keyframeCounter 第一个参数表示某个关键帧，第2个参数表示该关键帧看到了多少当前帧(mCurrentFrame)的地图点，也就是共视程度
                     keyframeCounter[it->first]++;
             }
             else
