@@ -1470,7 +1470,7 @@ bool Tracking::TrackLocalMap()
     mnMatchesInliers = 0;
 
     // Update MapPoints Statistics
-    // step 3：更新当前帧的MapPoints被观测程度，并统计跟踪局部地图的效果
+    // step 4：更新当前帧的MapPoints被观测程度，并统计跟踪局部地图的效果
     for(int i=0; i<mCurrentFrame.N; i++)
     {
         if(mCurrentFrame.mvpMapPoints[i])
@@ -1500,7 +1500,7 @@ bool Tracking::TrackLocalMap()
 
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
-    // step 4：决定是否跟踪成功
+    // step 5：决定是否跟踪成功
     //如果最近刚刚发生了重定位,那么至少跟踪上了50个点我们才认为是跟踪上了
     if(mCurrentFrame.mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)
         return false;
@@ -1789,6 +1789,7 @@ void Tracking::SearchLocalPoints()
                 // 标记该点被当前帧观测到
                 pMP->mnLastFrameSeen = mCurrentFrame.mnId;
                 // 标记该点将来不被投影，因为已经匹配过(指的是使用恒速运动模型进行投影)
+                // ? 这的顺序是什么 
                 pMP->mbTrackInView = false;
             }
         }
@@ -1927,7 +1928,7 @@ void Tracking::UpdateLocalKeyFrames()
                     // map[key] = value，当要插入的键存在时，会覆盖键对应的原来的值。如果键不存在，则添加一组键值对
                     // it->first 是地图点看到的关键帧，同一个关键帧看到的地图点会累加到该关键帧计数
                     // 所以最后keyframeCounter 第一个参数表示某个关键帧，第2个参数表示该关键帧看到了多少当前帧(mCurrentFrame)的地图点，也就是共视程度
-                    keyframeCounter[it->first]++;
+                    keyframeCounter[it->first]++;  // wxz 这部分再看一看 
             }
             else
             {
@@ -1973,7 +1974,7 @@ void Tracking::UpdateLocalKeyFrames()
         
         // mnTrackReferenceForFrame防止重复添加局部关键帧
         //? 这里我可以理解成为,某个关键帧已经被设置为当前帧的 局部关键帧了吗?
-        pKF->mnTrackReferenceForFrame = mCurrentFrame.mnId;
+        pKF->mnTrackReferenceForFrame = mCurrentFrame.mnId;    // wxz 一级局部关键帧
     }
 
 
