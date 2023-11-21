@@ -527,7 +527,6 @@ void Tracking::Track()
             // 只进行跟踪tracking，局部地图不工作
  
             // step 2.1：跟踪上一帧或者参考帧或者重定位
-j
             // tracking跟丢了, 那么就只能进行重定位了
             if(mState==LOST)
             {
