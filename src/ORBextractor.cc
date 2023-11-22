@@ -1112,6 +1112,7 @@ void ORBextractor::ComputeKeyPointsOctTree(
 			//计算当前网格最大的行坐标，这里的+6=+3+3，即考虑到了多出来以便进行FAST特征点提取用的3像素边界
 			//前面的EDGE_THRESHOLD指的应该是提取后的特征点所在的边界，所以minBorderY是考虑了计算半径时候的图像边界
 			//目测一个图像网格的大小是25*25啊
+            // ? 这里为什么+6？
             float maxY = iniY+hCell+6;  //  wxz maxY是网格的下行的的行坐标
 
 			//如果初始的行坐标就已经超过了有效的图像边界了，这里的“有效图像”是指原始的、可以提取FAST特征点的图像区域
