@@ -72,7 +72,7 @@ void LocalMapping::SetTracker(Tracking *pTracker)
 void LocalMapping::Run()
 {
 
-    // 设置当前run函数正在运行
+    // 标记状态 设置当前run函数正在运行，尚未结束
     mbFinished = false;
     // 主循环
     while(1)
@@ -185,7 +185,7 @@ void LocalMapping::InsertKeyFrame(KeyFrame *pKF)
 bool LocalMapping::CheckNewKeyFrames()
 {
     unique_lock<mutex> lock(mMutexNewKFs);
-    return(!mlNewKeyFrames.empty());
+    return(!mlNewKeyFrames.empty()); // 检测是否有关键帧
 }
 
 /*
@@ -205,6 +205,7 @@ void LocalMapping::ProcessNewKeyFrame()
         // 从列表中获得一个等待被插入的关键帧
         // 获取list中第一个元素，之前需要检查list是否为空，函数CheckNewKeyFrames()检查此list是否为空
         mpCurrentKeyFrame = mlNewKeyFrames.front();
+        // wxz 取出来最前面一帧之后，在mlNewKeyFrames删掉他
         mlNewKeyFrames.pop_front();
     }
 
@@ -396,6 +397,7 @@ void LocalMapping::CreateNewMapPoints()
 
         // Search matches that fullfil epipolar constraint
         // Step 5：通过极线约束限制匹配时的搜索范围，进行特征点匹配
+        // 通过BoW对两关键帧的未匹配的特征点快速匹配，用极限约束抑制离群点，生成新的匹配点对
         vector<pair<size_t,size_t> > vMatchedIndices;
         matcher.SearchForTriangulation(mpCurrentKeyFrame,pKF2,F12,vMatchedIndices,false);
 
@@ -852,7 +854,7 @@ bool LocalMapping::AcceptKeyFrames()
 void LocalMapping::SetAcceptKeyFrames(bool flag)
 {
     unique_lock<mutex> lock(mMutexAccept);
-    mbAcceptKeyFrames=flag;
+    mbAcceptKeyFrames=flag; // 是否允许接受关键帧的状态标记
 }
 
 // 设置 mbnotStop标志的状态
