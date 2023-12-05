@@ -1064,6 +1064,7 @@ int ORBmatcher::SearchForTriangulation(KeyFrame *pKF1, KeyFrame *pKF2, cv::Mat F
  */
 int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const float th)
 {
+    // 相邻关键帧的R t
     cv::Mat Rcw = pKF->GetRotation();
     cv::Mat tcw = pKF->GetTranslation();
 
@@ -1072,7 +1073,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
     const float &cx = pKF->cx;
     const float &cy = pKF->cy;
     const float &bf = pKF->mbf;
-
+    // 相机光心世界坐标系下的坐标
     cv::Mat Ow = pKF->GetCameraCenter();
 
     int nFused=0;
@@ -1089,14 +1090,14 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
 
         if(pMP->isBad() || pMP->IsInKeyFrame(pKF))
             continue;
-
+        // 将地图点变换到关键帧的相机坐标系下 
         cv::Mat p3Dw = pMP->GetWorldPos();
         cv::Mat p3Dc = Rcw*p3Dw + tcw;
 
         // Depth must be positive
         if(p3Dc.at<float>(2)<0.0f)
             continue;
-
+        // 得到地图点投影到关键帧的图像坐标
         const float invz = 1/p3Dc.at<float>(2);
         const float x = p3Dc.at<float>(0)*invz;
         const float y = p3Dc.at<float>(1)*invz;
@@ -1105,6 +1106,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
         const float v = fy*y+cy;// 步骤1：得到MapPoint在图像上的投影坐标
 
         // Point must be inside the image
+        // wxz IsInImage： 判断（u，v） 是否在图像的有效边界内
         if(!pKF->IsInImage(u,v))
             continue;
 
@@ -1113,6 +1115,7 @@ int ORBmatcher::Fuse(KeyFrame *pKF, const vector<MapPoint *> &vpMapPoints, const
         const float maxDistance = pMP->GetMaxDistanceInvariance();
         const float minDistance = pMP->GetMinDistanceInvariance();
         cv::Mat PO = p3Dw-Ow;
+        
         const float dist3D = cv::norm(PO);
 
         // Depth must be inside the scale pyramid of the image

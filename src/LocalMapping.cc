@@ -744,7 +744,7 @@ void LocalMapping::SearchInNeighbors()
 
     // Update connections in covisibility graph
 
-    // STEP5：更新当前帧的MapPoints后更新与其它帧的连接关系
+      // STEP5：更新当前帧的MapPoints后更新与其它帧的连接关系
     // 更新covisibility图
     mpCurrentKeyFrame->UpdateConnections();
 }
