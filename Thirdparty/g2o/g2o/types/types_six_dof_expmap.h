@@ -91,6 +91,13 @@ public:
     const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[1]);
     const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
     Vector2d obs(_measurement);
+    // 误差公式
+    // 误差 = 观测 - 投影
+    // v2->estimate() ： 相机2世界坐标系下的三维点坐标
+    // map 函数 使用R t 把某个坐标系吓得三维点变换到另一个坐标系下
+    // v1 就是pose   v2 是三维点 
+    // v1->estimate().map(v2->estimate())  把相机2的地图点用相机1的变换矩阵 变换到相机1 的相机坐标系下
+    // cam_project 函数 是 将相机坐标系下的3d点 变成2d点 然后再用内参矩阵反投影到像素坐标系下
     _error = obs-cam_project(v1->estimate().map(v2->estimate()));
   }
 

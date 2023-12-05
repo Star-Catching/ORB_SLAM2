@@ -661,7 +661,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     // Local MapPoints seen in Local KeyFrames
     // Step 3：遍历 lLocalKeyFrames 中关键帧，将它们观测的MapPoints加入到lLocalMapPoints
     list<MapPoint*> lLocalMapPoints;
-    // 遍历 lLocalKeyFrames 中的每一个关S键帧
+    // 遍历 lLocalKeyFrames 中的每一个关键帧
     for(list<KeyFrame*>::iterator lit=lLocalKeyFrames.begin() , lend=lLocalKeyFrames.end(); lit!=lend; lit++)
     {
         vector<MapPoint*> vpMPs = (*lit)->GetMapPointMatches();
@@ -728,8 +728,10 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     {
         KeyFrame* pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+        // 设置初始化位姿
         vSE3->setEstimate(Converter::toSE3Quat(pKFi->GetPose()));
         vSE3->setId(pKFi->mnId);
+        // 如果是初始关键帧。要锁住位姿不优化
         vSE3->setFixed(pKFi->mnId==0);//第一帧位置固定
         optimizer.addVertex(vSE3);
         if(pKFi->mnId>maxKFid)
@@ -737,7 +739,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
     }
 
     // Set Fixed KeyFrame vertices
-    // Step  7：添加顶点：Pose of Fixed KeyFrame，注意这里调用了vSE3->setFixed(true)。
+    // Step  7：添加顶点：Pose of Fixed KeyFrame，注意这里调用了vSE3->setFixed(true)。   添加不优化的位姿顶点
+    // ? 为什么不优化的也要添加,  为了增加约束信息
     for(list<KeyFrame*>::iterator lit=lFixedCameras.begin(), lend=lFixedCameras.end(); lit!=lend; lit++)
     {
         KeyFrame* pKFi = *lit;
@@ -752,6 +755,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
     // Set MapPoint vertices
     // Step  7：添加3D顶点
+    // 边的数目 = pose数目 * 地图点数目 
     const int nExpectedSize = (lLocalKeyFrames.size()+lFixedCameras.size())*lLocalMapPoints.size();
 
     vector<g2o::EdgeSE3ProjectXYZ*> vpEdgesMono;
@@ -771,7 +775,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
     vector<MapPoint*> vpMapPointEdgeStereo;
     vpMapPointEdgeStereo.reserve(nExpectedSize);
-
+    // 卡方分布
     const float thHuberMono = sqrt(5.991);
     const float thHuberStereo = sqrt(7.815);
 
@@ -786,7 +790,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
         vPoint->setId(id);
         vPoint->setMarginalized(true);  //? 一直不明白这个是做什么的,设置可以被边缘化?    g2o 需要手动设置可以边缘化的点
         optimizer.addVertex(vPoint);
-
+        // 观测到该地图点的KF和该地图点在KF中的索引 
         const map<KeyFrame*,size_t> observations = pMP->GetObservations();
 
         // Set edges
@@ -812,10 +816,11 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
                     e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(id)));
                     e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(pKFi->mnId)));
                     e->setMeasurement(obs);
+                    // 权重为特征点所在图像金字塔的层数的倒数
                     const float &invSigma2 = pKFi->mvInvLevelSigma2[kpUn.octave];
                     e->setInformation(Eigen::Matrix2d::Identity()*invSigma2);
 
-                    // 这里也是使用鲁棒核函数
+                    // 这里也是使用鲁棒核函数抑制外点
                     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
                     e->setRobustKernel(rk);
                     rk->setDelta(thHuberMono);
