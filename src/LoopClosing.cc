@@ -115,6 +115,7 @@ void LoopClosing::InsertKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexLoopQueue);
     // NOTICE 这里第0个关键帧不能够参与到回环检测的过程中,因为第0关键帧定义了整个地图的世界坐标系
+    // ? 为什么第0个关键帧不能够参与到回环检测的过程中？ 第一个关键帧进入到系统不能再送进来回环检测，没意义
     if(pKF->mnId!=0)
         mlpLoopKeyFrameQueue.push_back(pKF);
 }

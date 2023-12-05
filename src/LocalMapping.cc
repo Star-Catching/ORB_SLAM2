@@ -881,6 +881,8 @@ void LocalMapping::InterruptBA()
 }
 
 // 关键帧剔除,在Covisibility Graph中的关键帧，其90%以上的MapPoints能被其他关键帧（至少3个）观测到，则认为该关键帧为冗余关键帧。
+// 检测当前关键帧在共视图中的关键帧，根据地图点在共视图中的冗余程度剔除该共视关键帧
+// 冗余关键帧的判定：90%以上的地图点能被其他关键帧（至少3个）观测到
 //hwh 1.查询当前帧的共视关键帧集合vpLocalKeyFrames，
 //hwh 2.查看vpLocalKeyFrames集合里的每一个关键帧pKF
 //hwh 3.计算pKF中所有地图点的个数nMPs，以及pKF中每个地图点能被多少关键帧看见，如果大于3，则表示地图点重复冗余,计算冗余点个数nRedundantObservations
@@ -892,7 +894,17 @@ void LocalMapping::KeyFrameCulling()
     // in at least other 3 keyframes (in the same or finer scale)
     // We only consider close stereo points
 
-    // STEP1：根据Covisibility Graph提取当前帧的共视关键帧 (所有)
+    // 该函数里变量层层深入，这里列一下：
+    // mpCurrentKeyFrame：当前关键帧，本程序就是判断它是否需要删除
+    // pKF： mpCurrentKeyFrame的某一个共视关键帧
+    // vpMapPoints：pKF对应的所有地图点
+    // pMP：vpMapPoints中的某个地图点
+    // observations：所有能观测到pMP的关键帧
+    // pKFi：observations中的某个关键帧
+    // scaleLeveli：pKFi的金字塔尺度
+    // scaleLevel：pKF的金字塔尺
+
+    // STEP1：根据Covisibility Graph（共视图）提取当前帧的共视关键帧 (所有)
     vector<KeyFrame*> vpLocalKeyFrames = mpCurrentKeyFrame->GetVectorCovisibleKeyFrames();
 
     // 对所有的局部关键帧进行遍历 ; 这里的局部关键帧就理解为当前关键帧的共视帧
@@ -932,6 +944,7 @@ void LocalMapping::KeyFrameCulling()
                     if(pMP->Observations()>thObs)
                     {
                         const int &scaleLevel = pKF->mvKeysUn[i].octave;
+                        // Observation存储的是可以看到该地图点的所有关键帧的集合
                         const map<KeyFrame*, size_t> observations = pMP->GetObservations();
                         // 判断该MapPoint是否同时被三个关键帧观测到
                         int nObs=0;
@@ -945,6 +958,8 @@ void LocalMapping::KeyFrameCulling()
 
                             // Scale Condition 
                             // 尺度约束，要求MapPoint在该局部关键帧的特征尺度大于（或近似于）其它关键帧的特征尺度
+                            // 尺度约束：为什么pKF 尺度+1 要大于等于 pKFi 尺度？
+                            // 回答：因为同样或更低金字塔层级的地图点更准确
                             if(scaleLeveli<=scaleLevel+1)
                             {
                                 nObs++;
