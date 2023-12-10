@@ -198,7 +198,7 @@ bool LoopClosing::DetectLoop()
     // A group is consistent with a previous group if they share at least a keyframe
     // We must detect a consistent loop in several consecutive keyframes to accept it
     // STEP 4：在候选帧中检测具有连续性的候选帧
-    // 1、每个候选帧将与自己相连的关键帧构成一个“子候选组spCandidateGroup”， vpCandidateKFs-->spCandidateGroup
+    // 1、每个候选帧将与自 “子候选组spCandidateGroup”， vpCandidateKFs-->spCandidateGroup
     // 2、检测“子候选组”中每一个关键帧是否存在于“连续组”，如果存在 nCurrentConsistency++，则将该“子候选组”放入“当前连续组vCurrentConsistentGroups”
     // 3、如果nCurrentConsistency大于等于3，那么该”子候选组“代表的候选帧过关，进入mvpEnoughConsistentCandidates
     
@@ -235,6 +235,9 @@ bool LoopClosing::DetectLoop()
         bool bEnoughConsistent = false;
         bool bConsistentForSomeGroup = false;
         // 遍历之前的“子连续组s”
+        // 上一次闭环的连续组链 std::vector<ConsistentGroup> mvConsistentGroups
+        // 其中ConsistentGroup的定义：typedef pair<set<KeyFrame*>,int> ConsistentGroup
+        // 其中 ConsistentGroup.first对应每个“连续组”中的关键帧集合，ConsistentGroup.second为每个“连续组”的连续长度
         for(size_t iG=0, iendG=mvConsistentGroups.size(); iG<iendG; iG++)
         {
             // 取出一个之前的子连续组
