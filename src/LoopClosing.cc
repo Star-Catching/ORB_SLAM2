@@ -134,11 +134,14 @@ bool LoopClosing::CheckNewKeyFrames()
 bool LoopClosing::DetectLoop()
 {
     {
-        // 从队列中取出一个关键帧,作为当前关键帧
+        // 从队列中取出一个关键帧,作为当前检测闭环关键帧
         unique_lock<mutex> lock(mMutexLoopQueue);
+        // 从队列头开始取，也就是先取早进来的关键帧
         mpCurrentKF = mlpLoopKeyFrameQueue.front();
+        // 取出关键帧后从队列里弹出该关键帧
         mlpLoopKeyFrameQueue.pop_front();
         // Avoid that a keyframe can be erased while it is being process by this thread
+        // 设置当前关键帧不要在优化的过程中被删除
         mpCurrentKF->SetNotErase();
     }
 
@@ -174,7 +177,7 @@ bool LoopClosing::DetectLoop()
     }
 
     // Query the database imposing the minimum score
-    // STEP 3：在所有关键帧中找出闭环备选帧
+    // STEP 3：在所有关键帧中找出闭环备选帧（注意不和当前帧连接）
     // 说白了就是认为和当前关键帧具有回环关系的关键帧,不应该低于当前关键帧的相邻关键帧的最低的相似度
     // 得到的这些关键帧,和当前关键帧具有较多的共视单词,并且相似度评分都挺高
     vector<KeyFrame*> vpCandidateKFs = mpKeyFrameDB->DetectLoopCandidates(mpCurrentKF, minScore);
