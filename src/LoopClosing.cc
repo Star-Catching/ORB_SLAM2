@@ -260,7 +260,7 @@ bool LoopClosing::DetectLoop()
             {
                 // 和当前的候选组发生"连续"关系的子连续组的"已连续id"
                 int nPreviousConsistency = mvConsistentGroups[iG].second;
-                // 如果当前遍历到的"子连续组"还没有和"子候选组有相同的关键帧的记录,那么就+
+                 // 如果当前遍历到的"子连续组"还没有和"子候选组有相同的关键帧的记录,那么就+
                 int nCurrentConsistency = nPreviousConsistency + 1;
                
                 if(!vbConsistentGroup[iG])// 这里作者原本意思是不是应该是vbConsistentGroup[i]而不是vbConsistentGroup[iG]呢？（wubo???）
@@ -351,13 +351,14 @@ bool LoopClosing::ComputeSim3()
 
     // Step 0. 准备工作
     // For each consistent loop candidate we try to compute a Sim3
+    // 对每个（上一步得到的具有偶够连续关系的）闭环候选帧都准备算一个sim3
     const int nInitialCandidates = mvpEnoughConsistentCandidates.size();
 
     // We compute first ORB matches for each candidate
     // If enough matches are found, we setup a Sim3Solver
     ORBmatcher matcher(0.75,true);
 
-    // 用 vector 存储每一个候选帧的Sim3Solver求解器
+    // 用 vector 存储每一个候选关键帧的Sim3Solver求解器
     vector<Sim3Solver*> vpSim3Solvers;
     vpSim3Solvers.resize(nInitialCandidates);
 
@@ -394,7 +395,7 @@ bool LoopClosing::ComputeSim3()
         //hwh mpCurrentKF为闭环线程正在处理的关键帧
         int nmatches = matcher.SearchByBoW(mpCurrentKF,pKF,vvpMapPointMatches[i]);
 
-        // 匹配的特征点数太少，该候选帧剔除
+        // 粗筛 ：匹配的特征点数太少，该候选帧剔除
         if(nmatches<20)
         {
             vbDiscarded[i] = true;
@@ -405,9 +406,10 @@ bool LoopClosing::ComputeSim3()
             // Step 1.3 为保留的候选帧构造Sim3求解器
             // 如果 mbFixScale 为 true，则是6DoFf优化（双目 RGBD）
             // 如果是false，则是7DoF优化（单目）
-            Sim3Solver* pSolver = new Sim3Solver(mpCurrentKF,pKF,vvpMapPointMatches[i],mbFixScale);
+            // wxz 输入一个当前关键帧 一个候选关键帧 通过他们3d点的匹配 就可以得到他们之间的相对位姿和匹配关系
+             Sim3Solver* pSolver = new Sim3Solver(mpCurrentKF,pKF,vvpMapPointMatches[i],mbFixScale);
 
-            // Sim3Solver Ransac 过程至少20个inliers 300次迭代
+            // Sim3Solver Ransac 过程至少20个inliers（内点） 300次迭代
             pSolver->SetRansacParameters(0.99,20,300);
             vpSim3Solvers[i] = pSolver;
         }
@@ -456,6 +458,7 @@ bool LoopClosing::ComputeSim3()
             }
 
             // If RANSAC returns a Sim3, perform a guided matching and optimize with all correspondences
+            // 如果计算出了sim3变换，继续匹配出更多点并优化。因为之前SearchByBow匹配可能有遗漏
             if(!Scm.empty())
             {
                 vector<MapPoint*> vpMapPointMatches(vvpMapPointMatches[i].size(), static_cast<MapPoint*>(NULL));
@@ -482,7 +485,7 @@ bool LoopClosing::ComputeSim3()
                 g2o::Sim3 gScm(Converter::toMatrix3d(R),Converter::toVector3d(t),s);
             
                 // 如果mbFixScale为true，则是6DoFf优化（双目 RGBD），如果是false，则是7DoF优化（单目）
-                // 优化mpCurrentKF与pKF对应的MapPoints间的Sim3，得到优化后的量gScm
+                // 优化mpCurrentKF与pKF对应的MapPoints间的Sim3，得到优化后的量gScm g2o优化sim3
                 const int nInliers = Optimizer::OptimizeSim3(mpCurrentKF, pKF, vpMapPointMatches, gScm, 10, mbFixScale);
 
                 // 如果优化成功，则停止 ransacs（即while循环）并继续下一步
@@ -571,7 +574,7 @@ bool LoopClosing::ComputeSim3()
         if(mvpCurrentMatchedPoints[i])
             nTotalMatches++;
     }
-
+ 
     // Step 6.0 清空mvpEnoughConsistentCandidates
     if(nTotalMatches>=40)
     {
@@ -599,7 +602,7 @@ bool LoopClosing::ComputeSim3()
  * 4. 对Essential Graph（Pose Graph）进行优化，MapPoints的位置则根据优化后的位姿做相对应的调整                         \n
  * 5. 创建线程进行全局Bundle Adjustment
  */
-void LoopClosing::CorrectLoop()
+void LoopClosing:: CorrectLoop()
 {
 
     cout << "Loop detected!" << endl;
